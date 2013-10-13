@@ -1,0 +1,10 @@
+
+=pod
+
+=head1 AnyEvent::WebSocket::Server
+
+WebSocket server for AnyEvent
+
+This module is currently under development. Please wait for CPAN release.
+
+=cut
