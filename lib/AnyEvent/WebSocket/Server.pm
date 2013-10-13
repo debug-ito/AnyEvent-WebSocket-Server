@@ -1,15 +1,23 @@
 package AnyEvent::WebSocket::Server;
 use strict;
 use warnings;
+use Carp;
 use AnyEvent::Handle;
 use Protocol::WebSocket::Handshake::Server;
+use Try::Tiny;
 
 use AnyEvent::WebSocket::Client;
 use AnyEvent::WebSocket::Connection;
 
 sub new {
     my ($class, %args) = @_;
-    my $self = bless {}, $class;
+    my $validator = $args{validator} || sub {};
+    if(ref($validator) ne "CODE") {
+        croak "validator parameter must be a code-ref";
+    }
+    my $self = bless {
+        validator => $validator
+    }, $class;
     return $self;
 }
 
@@ -31,19 +39,25 @@ sub establish {
         }),
     );
     my $handshake = Protocol::WebSocket::Handshake::Server->new;
+    my $validator = $self->{validator};
     $stream->read_cb(sub {
         my ($handle) = @_;
-        if(!defined($handshake->parse($handle->{rbuf}))) {
-            $cv_connection->croak("handshake error: " . $handshake->error);
+        try {
+            if(!defined($handshake->parse($handle->{rbuf}))) {
+                die "handshake: error" . $handshake->error . "\n";
+            }
+            return if !$handshake->is_done;
+            my @validator_result = $validator->($handshake->req);
+            $handle->push_write($handshake->to_string);
+            $cv_connection->send(AnyEvent::WebSocket::Connection->new(_stream => $stream), @validator_result);
             undef $stream;
             undef $cv_connection;
-            return;
-        }
-        return if !$handshake->is_done;
-        $handle->push_write($handshake->to_string);
-        $cv_connection->send(AnyEvent::WebSocket::Connection->new(_stream => $stream));
-        undef $stream;
-        undef $cv_connection;
+        }catch {
+            my $e = shift;
+            $cv_connection->croak($e);
+            undef $stream;
+            undef $cv_connection;
+        };
     });
     return $cv_connection;
 }
