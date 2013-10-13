@@ -14,7 +14,7 @@ my $cv_server_finish = AnyEvent->condvar;
 
 my $cv_port = start_server sub { ## accept cb
     my ($fh) = @_;
-    AnyEvent::WebSocket::Server->new->establish(fh => $fh)->cb(sub {
+    AnyEvent::WebSocket::Server->new->establish($fh)->cb(sub {
         my $conn = shift->recv;
         push(@server_conns, $conn);
         $conn->on(each_message => sub {

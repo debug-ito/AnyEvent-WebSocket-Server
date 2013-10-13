@@ -16,7 +16,7 @@ __END__
     my $tcp_server;
     $tcp_server = tcp_server undef, 8080, sub {
         my ($fh) = @_;
-        $server->establish(fh => $fh)->cb(sub {
+        $server->establish($fh)->cb(sub {
             my $connection = eval { shift->recv };
             if($@) {
                 warn "Invalid connection request: $@\n";
@@ -36,30 +36,13 @@ This version does not support SSL/TLS.
 
 =head1 CLASS METHODS
 
-=head2 $server = AnyEvent::WebSocket::Server->new()
+=head2 $server = AnyEvent::WebSocket::Server->new(%args)
 
 The constructor.
-In this version, it takes no argument.
-
-=head1 OBJECT METHODS
-
-=head2 $conn_cv = $server->establish(%args)
-
-Establish a WebSocket connection to a client via the given connection method.
 
 Fields in C<%args> are:
 
 =over
-
-=item C<fh> => FILEHANDLE (semi-optional)
-
-A filehandle for a connection socket, which is usually obtained by C<tcp_server()> function in L<AnyEvent::Socket>.
-If C<psgi_env> field is omitted, this field is mandatory.
-
-=item C<psgi_env> => L<PSGI> environment object (semi-optional)
-
-A L<PSGI> environment object obtained from a L<PSGI> server.
-If C<fh> field is omitted, this field is mandatory and C<< $env->{"psgix.io"} >> is used for the connection (see L<PSGI::Extensions>).
 
 =item C<validator> => CODE (optional)
 
@@ -71,15 +54,25 @@ The validator is called like
     $validator->($request)
 
 where C<$handshake> is a C<Protocol::WebSocket::Request> object.
-If you reject the C<$request>, throw an exception, then the returned C<$conn_cv> will croak the same exception.
+If you reject the C<$request>, throw an exception.
 If you accept the C<$request>, just don't throw any exception.
 
 =back
 
+
+=head1 OBJECT METHODS
+
+=head2 $conn_cv = $server->establish($fh)
+
+Establish a WebSocket connection to a client via the given connection filehandle.
+
+C<$fh> is a filehandle for a connection socket, which is usually obtained by C<tcp_server()> function in L<AnyEvent::Socket>.
+
 Return value C<$conn_cv> is an L<AnyEvent> condition variable.
 
 In success, a L<AnyEvent::WebSocket::Connection> object is sent through the C<$conn_cv>.
-In failure, C<$conn_cv> will croak an error message.
+In failure (e.g. the client sent a totally invalid request or your validator threw an exception),
+C<$conn_cv> will croak an error message.
 
     $connection = eval { $conn_cv->recv };
     if($@) {
@@ -94,6 +87,13 @@ You can use C<$connection> to send and receive data through WebSocket. See L<Any
 Note that even if C<$conn_cv> croaks, the connection socket C<$fh> remains intact.
 You have to close the socket manually if it's necessary.
 
+=head2 $conn_cv = $sever->establish_psgi($psgi_env, [$fh])
+
+The same as C<establish()> method except that the request is in the form of L<PSGI> environment.
+
+C<$psgi_env> is a L<PSGI> environment object obtained from a L<PSGI> server.
+C<$fh> is the connection filehandle.
+If C<$fh> is omitted, C<< $psgi_env->{"psgix.io"} >> is used for the connection (see L<PSGI::Extensions>).
 
 
 =head1 AUTHOR
@@ -101,6 +101,8 @@ You have to close the socket manually if it's necessary.
 Toshio Ito, C<< <toshioito at cpan.org> >>
 
 =head1 REPOSITORY
+
+L<https://github.com/debug-ito/AnyEvent-WebSocket-Server>
 
 =head1 ACKNOWLEDGEMENTS
 
