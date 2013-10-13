@@ -8,7 +8,7 @@ use Test::Memory::Cycle ();
 use Test::More;
 use Test::Builder;
 
-our @EXPORT_OK = qw(start_server set_timeout memory_cycle_ok);
+our @EXPORT_OK = qw(start_server set_timeout memory_cycle_ok memory_cycle_exists);
 
 sub start_server {
     my ($accept_cb) = @_;
@@ -21,20 +21,26 @@ sub start_server {
 }
 
 sub set_timeout {
+    my ($timeout) = @_;
+    $timeout ||= 10;
     my $w;
-    $w = AnyEvent->timer(after => 10, cb => sub {
+    $w = AnyEvent->timer(after => $timeout, cb => sub {
         fail("Timeout");
         undef $w;
         exit 2;
     });
 }
 
-sub memory_cycle_ok {
-    local $Test::Builder::Level = $Test::Builder::Level + 1;
-    local $SIG{__WARN__} = sub {
-        note(shift);
+foreach my $func (qw(memory_cycle_ok memory_cycle_exists)) {
+    no strict "refs";
+    *{$func} = sub {
+        local $Test::Builder::Level = $Test::Builder::Level + 1;
+        local $SIG{__WARN__} = sub {
+            note(shift);
+        };
+        return &{"Test::Memory::Cycle::$func"}(@_);
     };
-    return Test::Memory::Cycle::memory_cycle_ok(@_);
 }
+
 
 1;

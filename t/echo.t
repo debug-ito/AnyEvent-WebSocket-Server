@@ -3,7 +3,7 @@ use warnings;
 use Test::More;
 use FindBin;
 use lib ($FindBin::RealBin);
-use testlib::Util qw(start_server set_timeout memory_cycle_ok);
+use testlib::Util qw(start_server set_timeout memory_cycle_ok memory_cycle_exists);
 use AnyEvent::WebSocket::Server;
 use AnyEvent::WebSocket::Client;
 no utf8;
@@ -25,6 +25,7 @@ my $cv_port = start_server sub { ## accept cb
             $conn->send($message);
         });
         $conn->on(finish => sub {
+            undef $conn; ## make the connection half-immortal
             $cv_server_finish->end;
         });
     });
@@ -53,11 +54,11 @@ foreach my $case (
 }
 
 is(scalar(@server_conns), 1, "1 server connection");
-memory_cycle_ok($server_conns[0], "free of memory cycle on Connection");
+memory_cycle_exists($server_conns[0], "memory cycle on Connection at 'finish' event handler, which makes the Connection half-immortal");
 
 $client_conn->close();
 $cv_server_finish->recv;
 
-memory_cycle_ok($server_conns[0], "free of memory cycle on Connection");
+memory_cycle_ok($server_conns[0], "free of memory cycle on Connection. Now it's mortal.");
 
 done_testing;
