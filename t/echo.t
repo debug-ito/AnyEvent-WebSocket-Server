@@ -16,13 +16,14 @@ my $cv_port = start_server sub { ## accept cb
     my ($fh) = @_;
     AnyEvent::WebSocket::Server->new->establish($fh)->cb(sub {
         my $conn = shift->recv;
+        $cv_server_finish->begin;
         push(@server_conns, $conn);
         $conn->on(each_message => sub {
             my ($conn, $message) = @_;
             $conn->send($message);
         });
         $conn->on(finish => sub {
-            $cv_server_finish->send;
+            $cv_server_finish->end;
         });
     });
 };
@@ -45,14 +46,12 @@ foreach my $case (
     is($cv_received->recv, $case->{data}, "$case->{label}: echo OK");
 }
 
-is(sclar(@server_conns), 1, "1 server connection");
-memory_cycle_ok($server_conns[0], "free of memory cycle on Connection");  ## is it true?
+is(scalar(@server_conns), 1, "1 server connection");
+memory_cycle_ok($server_conns[0], "free of memory cycle on Connection");
 
 $client_conn->close();
 $cv_server_finish->recv;
 
-memory_cycle_ok($server_conns[0], "free of memory cycle on Connection");  ## is it true?
-
+memory_cycle_ok($server_conns[0], "free of memory cycle on Connection");
 
 done_testing;
-
