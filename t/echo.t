@@ -17,9 +17,11 @@ my $cv_port = start_server sub { ## accept cb
     my ($fh) = @_;
     note("TCP connection accepted");
     AnyEvent::WebSocket::Server->new->establish($fh)->cb(sub {
-        my $conn = shift->recv;
+        my ($conn, @values) = shift->recv;
         $cv_server_finish->begin;
         push(@server_conns, $conn);
+        isa_ok($conn, "AnyEvent::WebSocket::Connection");
+        is(scalar(@values), 0, "empty validator results");
         $conn->on(each_message => sub {
             my ($conn, $message) = @_;
             $conn->send($message);
@@ -34,7 +36,7 @@ my $cv_port = start_server sub { ## accept cb
 note("TCP connect...");
 my $connect_port = $cv_port->recv;
 note("TCP port $connect_port opend.");
-my $client_conn = AnyEvent::WebSocket::Client->new->connect("ws://127.0.0.1:$connect_port/")->recv;
+my $client_conn = AnyEvent::WebSocket::Client->new->connect("ws://127.0.0.1:$connect_port/websocket")->recv;
 note("Client connection established.");
 
 foreach my $case (

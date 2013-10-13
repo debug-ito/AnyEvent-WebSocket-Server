@@ -56,9 +56,9 @@ __END__
 
     use AnyEvent::Socket qw(tcp_server);
     use AnyEvent::WebSocket::Server;
-            
+    
     my $server = AnyEvent::WebSocket::Server->new();
-            
+    
     my $tcp_server;
     $tcp_server = tcp_server undef, 8080, sub {
         my ($fh) = @_;
@@ -101,11 +101,14 @@ If omitted, it accepts the request.
 
 The validator is called like
 
-    $validator->($request)
+    @validator_result = $validator->($request)
 
-where C<$handshake> is a C<Protocol::WebSocket::Request> object.
+where C<$request> is a C<Protocol::WebSocket::Request> object.
+
 If you reject the C<$request>, throw an exception.
-If you accept the C<$request>, just don't throw any exception.
+
+If you accept the C<$request>, don't throw any exception.
+The return values of the C<$validator> are sent to the condition variable of C<establish()> method.
 
 =back
 
@@ -120,11 +123,15 @@ C<$fh> is a filehandle for a connection socket, which is usually obtained by C<t
 
 Return value C<$conn_cv> is an L<AnyEvent> condition variable.
 
-In success, a L<AnyEvent::WebSocket::Connection> object is sent through the C<$conn_cv>.
+In success, C<< $conn_cv->recv >> returns an L<AnyEvent::WebSocket::Connection> object and additional values returned by the validator.
 In failure (e.g. the client sent a totally invalid request or your validator threw an exception),
 C<$conn_cv> will croak an error message.
 
+    ($connection, @validator_result) = eval { $conn_cv->recv };
+    
+    ## or in scalar context, it returns $connection only.
     $connection = eval { $conn_cv->recv };
+    
     if($@) {
         my $error = $@;
         ...
