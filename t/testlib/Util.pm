@@ -11,9 +11,17 @@ use Test::Builder;
 our @EXPORT_OK = qw(start_server set_timeout memory_cycle_ok memory_cycle_exists);
 
 sub start_server {
-    my ($accept_cb) = @_;
+    my ($port, $accept_cb);
+    if(@_ == 1) {
+        ($accept_cb) = @_;
+    }elsif(@_ == 2) {
+        ($port, $accept_cb) = @_;
+    }else {
+        die "specify ([port], accept_cb)";
+    }
+
     my $cv_server_port = AnyEvent->condvar;
-    tcp_server '127.0.0.1', undef, $accept_cb, sub { ## prepare cb
+    tcp_server '127.0.0.1', $port, $accept_cb, sub { ## prepare cb
         my ($fh, $host, $port) = @_;
         $cv_server_port->send($port);
     };

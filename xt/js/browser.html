@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>AnyEvent::WebSocket::Server</title>
+    <link rel="stylesheet" href="http://code.jquery.com/qunit/qunit-1.12.0.css">
+  </head>
+  <body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="http://code.jquery.com/qunit/qunit-1.12.0.js"></script>
+<script>
+"use strict";
+
+function getPort() {
+    return 18888;
+    // var port_re = new RegExp("port=([0-9]+)");
+    // if(!port_re.test(document.location)) {
+    //     throw "cannot obtain port number";
+    // }
+    // return parseInt(port_re.$1, 10);
+}
+
+function createData(base, iteration_num) {
+    var data = "";
+    for(var i = 0 ; i < iteration_num ; i++) {
+        data += base;
+    }
+    return data;
+}
+
+var test_cases = [
+    {label: "5 bytes", data: "AAAAA" },
+    {label: "empty", data: ""},
+    {label: "zero", data: "0"},
+    {label: "256 bytes", data: createData("AAAA", 64)},
+    {label: "64 ki bytes", data: createData("AAAAAAAA", 8 * 1024)},
+];
+
+var ws_url = "ws://127.0.0.1:"+ getPort() +"/";
+
+module("connect, send and receive");
+
+$.each(test_cases, function(i, test_case) {
+    asyncTest(test_case.label, function() {
+        var ws = new WebSocket(ws_url);
+        var received = false;
+        test_case.websocket = ws;
+        ws.onopen = function() {
+            ws.send(test_case.data);
+        };
+        ws.onmessage = function(event) {
+            if(received) {
+                ok(false, "data already received");
+            }
+            strictEqual(event.data, test_case.data, "data OK");
+            start();
+        };
+    });
+});
+
+module("close");
+
+$.each(test_cases, function(i, test_case) {
+    asyncTest(test_case.label, function() {
+        var ws = test_case.websocket;
+        ws.onclose = function() {
+            ok(true, "closed");
+            start();
+        };
+        // ws.close();   // It won't close the TCP connection immediately
+        ws.send("QUIT"); 
+    });
+});
+
+
+</script>
+  </body>
+</html>
