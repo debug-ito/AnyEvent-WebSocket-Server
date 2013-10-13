@@ -1,6 +1,52 @@
 package AnyEvent::WebSocket::Server;
 use strict;
 use warnings;
+use AnyEvent::Handle;
+use Protocol::WebSocket::Handshake::Server;
+
+use AnyEvent::WebSocket::Client;
+use AnyEvent::WebSocket::Connection;
+
+sub new {
+    my ($class, %args) = @_;
+    my $self = bless {}, $class;
+    return $self;
+}
+
+sub establish {
+    my ($self, $fh) = @_;
+    my $cv_connection = AnyEvent->condvar;
+    if(!defined($fh)) {
+        $cv_connection->croak("fh parameter is mandatory for establish() method");
+        return $cv_connection;
+    }
+    my $stream = AnyEvent::WebSocket::Client::Stream->new(
+        handle => AnyEvent::Handle->new(fh => $fh, on_error => sub {
+            my ($handle, $fatal, $message) = @_;
+            if($fatal) {
+                $cv_connection->croak("connection error: $message");
+            }else {
+                warn $message;
+            }
+        }),
+    );
+    my $handshake = Protocol::WebSocket::Handshake::Server->new;
+    $stream->read_cb(sub {
+        my ($handle) = @_;
+        if(!defined($handshake->parse($handle->{rbuf}))) {
+            $cv_connection->croak("handshake error: " . $handshake->error);
+            undef $stream;
+            undef $cv_connection;
+            return;
+        }
+        return if !$handshake->is_done;
+        $handle->push_write($handshake->to_string);
+        $cv_connection->send(AnyEvent::WebSocket::Connection->new(_stream => $stream));
+        undef $stream;
+        undef $cv_connection;
+    });
+    return $cv_connection;
+}
 
 1;
 

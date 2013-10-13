@@ -1,19 +1,21 @@
 use strict;
 use warnings;
 use Test::More;
-use Test::Memory::Cycle;
 use FindBin;
 use lib ($FindBin::RealBin);
-use testlib::Util qw(start_server);
+use testlib::Util qw(start_server set_timeout memory_cycle_ok);
 use AnyEvent::WebSocket::Server;
 use AnyEvent::WebSocket::Client;
 no utf8;
+
+set_timeout;
 
 my @server_conns = ();
 my $cv_server_finish = AnyEvent->condvar;
 
 my $cv_port = start_server sub { ## accept cb
     my ($fh) = @_;
+    note("TCP connection accepted");
     AnyEvent::WebSocket::Server->new->establish($fh)->cb(sub {
         my $conn = shift->recv;
         $cv_server_finish->begin;
@@ -28,7 +30,11 @@ my $cv_port = start_server sub { ## accept cb
     });
 };
 
-my $client_conn = AnyEvent::WebSocket::Client->new->connect("ws://127.0.0.1:" . $cv_port->recv . "/")->recv;
+note("TCP connect...");
+my $connect_port = $cv_port->recv;
+note("TCP port $connect_port opend.");
+my $client_conn = AnyEvent::WebSocket::Client->new->connect("ws://127.0.0.1:$connect_port/")->recv;
+note("Client connection established.");
 
 foreach my $case (
     {label => "0 bytes", data => ""},

@@ -4,8 +4,11 @@ use warnings;
 use Exporter qw(import);
 use AnyEvent;
 use AnyEvent::Socket qw(tcp_server);
+use Test::Memory::Cycle ();
+use Test::More;
+use Test::Builder;
 
-our @EXPORT_OK = qw(start_server);
+our @EXPORT_OK = qw(start_server set_timeout memory_cycle_ok);
 
 sub start_server {
     my ($accept_cb) = @_;
@@ -17,6 +20,21 @@ sub start_server {
     return $cv_server_port;
 }
 
+sub set_timeout {
+    my $w;
+    $w = AnyEvent->timer(after => 10, cb => sub {
+        fail("Timeout");
+        undef $w;
+        exit 2;
+    });
+}
+
+sub memory_cycle_ok {
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+    local $SIG{__WARN__} = sub {
+        note(shift);
+    };
+    return Test::Memory::Cycle::memory_cycle_ok(@_);
+}
+
 1;
-
-
