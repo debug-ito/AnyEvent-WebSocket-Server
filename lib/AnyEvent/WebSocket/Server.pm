@@ -10,9 +10,9 @@ __END__
 
     use AnyEvent::Socket qw(tcp_server);
     use AnyEvent::WebSocket::Server;
-        
+            
     my $server = AnyEvent::WebSocket::Server->new();
-        
+            
     my $tcp_server;
     $tcp_server = tcp_server undef, 8080, sub {
         my ($fh) = @_;
@@ -23,9 +23,13 @@ __END__
                 close($fh);
                 return;
             }
-            $connection->send("bye!");
-            $connection->close();
-            undef $tcp_server;   # shutdown the listening port
+            $connection->on(each_message => sub {
+                my ($connection, $message) = @_;
+                $connection->send($message); ## echo
+            });
+            $connection->on(finish => sub {
+                undef $connection;
+            });
         });
     };
 
