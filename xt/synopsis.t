@@ -49,7 +49,7 @@ my %received_id_counts = ();
 
 foreach my $conn_entry (reverse @conns) {
     $finish_cv->begin;
-    $conn_entry->{conn}->on_next_message(sub {
+    $conn_entry->{conn}->on(next_message => sub {
         my ($conn, $message) = @_;
         $received_id_counts{$message->body}++;
         $finish_cv->end;
