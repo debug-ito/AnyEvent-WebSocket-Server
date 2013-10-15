@@ -166,6 +166,43 @@ C<$psgi_env> is a L<PSGI> environment object obtained from a L<PSGI> server.
 C<$fh> is the connection filehandle.
 If C<$fh> is omitted, C<< $psgi_env->{"psgix.io"} >> is used for the connection (see L<PSGI::Extensions>).
 
+=head1 EXAMPLES
+
+=head2 Validator option
+
+The following server accepts WebSocket URLs such as C<ws://localhost:8080/2013/10>.
+
+    use AnyEvent::Socket qw(tcp_server);
+    use AnyEvent::WebSocket::Server;
+    
+    my $server = AnyEvent::WebSocket::Server->new(
+        validator => sub {
+            my ($req) = @_;  ## Protocol::WebSocket::Request
+            
+            my $path = $req->resource_name;
+            die "Invalid format" if $path !~ m{^/(\d{4})/(\d{2})};
+            
+            my ($year, $month) = ($1, $2);
+            die "Invalid month" if $month <= 0 || $month > 12;
+    
+            return ($year, $month);
+        }
+    );
+    
+    tcp_server undef, 8080, sub {
+        my ($fh) = @_;
+        $server->establish($fh)->cb(sub {
+            my ($conn, $year, $month) = eval { shift->recv };
+            if($@) {
+                my $error = $@;
+                error_response($fh, $error);
+                return;
+            }
+            $conn->send("You are accessing YEAR = $year, MONTH = $month");
+            $conn->on(finish => sub { undef $conn });
+        });
+    };
+
 
 =head1 AUTHOR
 
