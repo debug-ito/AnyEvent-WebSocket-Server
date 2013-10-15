@@ -45,17 +45,21 @@ module("connect, send and receive");
 $.each(test_cases, function(i, test_case) {
     asyncTest(test_case.label, function() {
         var ws = new WebSocket(ws_url);
-        var received = false;
+        var exp_received = ["connected", test_case.data];
+        var received_num = 0;
         test_case.websocket = ws;
         ws.onopen = function() {
             ws.send(test_case.data);
         };
         ws.onmessage = function(event) {
-            if(received) {
-                ok(false, "data already received");
+            if(received_num >= exp_received.length) {
+                ok(false, "too many data received");
             }
-            strictEqual(event.data, test_case.data, "data OK");
-            start();
+            strictEqual(event.data, exp_received[received_num], "data "+ received_num +" OK");
+            received_num++;
+            if(received_num === exp_received.length) {
+                start();
+            }
         };
     });
 });

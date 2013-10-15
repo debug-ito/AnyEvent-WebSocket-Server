@@ -37,6 +37,7 @@ my $cv_port = start_server 18888, sub {
             undef $conn;
             $cv_finish->end;
         });
+        $conn->send("connected");
     });
 };
 
