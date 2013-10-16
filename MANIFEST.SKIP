@@ -1,0 +1,7 @@
+^MYMETA\.yml$
+^MYMETA\.json$
+^\.git
+^_build
+^Build$
+^blib
+^MANIFEST\.
