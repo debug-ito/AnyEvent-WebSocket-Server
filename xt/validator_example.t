@@ -59,12 +59,6 @@ $conn->on(each_message => sub {
     $cv_finish->send($message->body);
 });
 
-
-## With AE::WS::Client 0.15, close() is necessary to kick the
-## each_message event, because the server-sent message is already
-## received together with the handshake response.
-$conn->close;
-
 is($cv_finish->recv, "You are accessing YEAR = 2013, MONTH = 10", "message OK");
 
 done_testing;

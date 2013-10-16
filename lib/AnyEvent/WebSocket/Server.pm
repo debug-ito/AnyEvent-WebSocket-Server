@@ -5,8 +5,6 @@ use Carp;
 use AnyEvent::Handle;
 use Protocol::WebSocket::Handshake::Server;
 use Try::Tiny;
-
-use AnyEvent::WebSocket::Client;
 use AnyEvent::WebSocket::Connection;
 
 sub new {
@@ -28,20 +26,20 @@ sub establish {
         $cv_connection->croak("fh parameter is mandatory for establish() method");
         return $cv_connection;
     }
-    my $stream = AnyEvent::WebSocket::Client::Stream->new(
-        handle => AnyEvent::Handle->new(fh => $fh, on_error => sub {
-            my ($handle, $fatal, $message) = @_;
-            if($fatal) {
-                $cv_connection->croak("connection error: $message");
-            }else {
-                warn $message;
-            }
-        }),
-    );
+    my $handle = AnyEvent::Handle->new(fh => $fh, on_error => sub {
+        my ($handle, $fatal, $message) = @_;
+        if($fatal) {
+            $cv_connection->croak("connection error: $message");
+        }else {
+            warn $message;
+        }
+    });
     my $handshake = Protocol::WebSocket::Handshake::Server->new;
     my $validator = $self->{validator};
-    $stream->read_cb(sub {
-        my ($handle) = @_;
+    $handle->on_read(sub {
+        ## We don't receive handle object as an argument here. $handle
+        ## is imported in this closure so that $handle becomes
+        ## half-immortal.
         try {
             if(!defined($handshake->parse($handle->{rbuf}))) {
                 die "handshake: error" . $handshake->error . "\n";
@@ -49,13 +47,13 @@ sub establish {
             return if !$handshake->is_done;
             my @validator_result = $validator->($handshake->req);
             $handle->push_write($handshake->to_string);
-            $cv_connection->send(AnyEvent::WebSocket::Connection->new(_stream => $stream), @validator_result);
-            undef $stream;
+            $cv_connection->send(AnyEvent::WebSocket::Connection->new(handle => $handle), @validator_result);
+            undef $handle;
             undef $cv_connection;
         }catch {
             my $e = shift;
             $cv_connection->croak($e);
-            undef $stream;
+            undef $handle;
             undef $cv_connection;
         };
     });
