@@ -159,6 +159,7 @@ You have to close the socket manually if it's necessary.
 =head2 $conn_cv = $sever->establish_psgi($psgi_env, [$fh])
 
 The same as C<establish()> method except that the request is in the form of L<PSGI> environment.
+B<This method is experimental. The API may change in the future.>
 
 C<$psgi_env> is a L<PSGI> environment object obtained from a L<PSGI> server.
 C<$fh> is the connection filehandle.
