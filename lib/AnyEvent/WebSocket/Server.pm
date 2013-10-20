@@ -19,24 +19,22 @@ sub new {
     return $self;
 }
 
-sub establish {
-    my ($self, $fh) = @_;
-    my $cv_connection = AnyEvent->condvar;
-    if(!defined($fh)) {
-        $cv_connection->croak("fh parameter is mandatory for establish() method");
-        return $cv_connection;
-    }
-    my $handle = AnyEvent::Handle->new(fh => $fh, on_error => sub {
+sub _create_on_error {
+    my ($cv) = @_;
+    return sub {
         my ($handle, $fatal, $message) = @_;
         if($fatal) {
-            $cv_connection->croak("connection error: $message");
+            $cv->croak("connection error: $message");
         }else {
             warn $message;
         }
-    });
-    my $handshake = Protocol::WebSocket::Handshake::Server->new;
-    my $validator = $self->{validator};
-    $handle->on_read(sub {
+    };
+}
+
+sub _do_handshake {
+    my ($cv_connection, $fh, $handshake, $validator) = @_;
+    my $handle = AnyEvent::Handle->new(fh => $fh, on_error => _create_on_error($cv_connection));
+    my $read_cb = sub {
         ## We don't receive handle object as an argument here. $handle
         ## is imported in this closure so that $handle becomes
         ## half-immortal.
@@ -56,7 +54,38 @@ sub establish {
             undef $handle;
             undef $cv_connection;
         };
-    });
+    };
+    $handle->{rbuf} = "";
+    $read_cb->();  ## in case the whole request is already consumed
+    $handle->on_read($read_cb) if defined $handle;
+}
+
+sub establish {
+    my ($self, $fh) = @_;
+    my $cv_connection = AnyEvent->condvar;
+    if(!defined($fh)) {
+        $cv_connection->croak("fh parameter is mandatory for establish() method");
+        return $cv_connection;
+    }
+    my $handshake = Protocol::WebSocket::Handshake::Server->new;
+    _do_handshake($cv_connection, $fh, $handshake, $self->{validator});
+    return $cv_connection;
+}
+
+sub establish_psgi {
+    my ($self, $env, $fh) = @_;
+    my $cv_connection = AnyEvent->condvar;
+    if(!defined($env)) {
+        $cv_connection->croak("psgi_env parameter is mandatory");
+        return $cv_connection;
+    }
+    $fh = $env->{"psgix.io"} if not defined $fh;
+    if(!defined($fh)) {
+        $cv_connection->croak("No connection file handle provided. Maybe the PSGI server does not support psgix.io extension.");
+        return $cv_connection;
+    }
+    my $handshake = Protocol::WebSocket::Handshake::Server->new_from_psgi($env);
+    _do_handshake($cv_connection, $fh, $handshake, $self->{validator});
     return $cv_connection;
 }
 
