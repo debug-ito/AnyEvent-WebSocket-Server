@@ -1,0 +1,74 @@
+{
+   "abstract" : "WebSocket server for AnyEvent",
+   "author" : [
+      "Toshio Ito <toshioito@cpan.org>"
+   ],
+   "dynamic_config" : 1,
+   "generated_by" : "Module::Build version 0.4003, CPAN::Meta::Converter version 2.132140",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "AnyEvent-WebSocket-Server",
+   "no_index" : {
+      "directory" : [
+         "t",
+         "xt",
+         "eg",
+         "inc"
+      ],
+      "file" : [
+         "README.pod"
+      ]
+   },
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "AnyEvent" : "0",
+            "AnyEvent::Handle" : "0",
+            "AnyEvent::Socket" : "0",
+            "AnyEvent::WebSocket::Client" : "0.17",
+            "Module::Build::Pluggable::CPANfile" : "0.02",
+            "Protocol::WebSocket::Frame" : "0",
+            "Protocol::WebSocket::Handshake::Client" : "0",
+            "Scalar::Util" : "0",
+            "Test::Memory::Cycle" : "0",
+            "Test::More" : "0",
+            "Test::Requires" : "0",
+            "Try::Tiny" : "0"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "Module::Build" : "0.40",
+            "Module::Build::Pluggable" : "0.09",
+            "Module::Build::Pluggable::CPANfile" : "0.02"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "AnyEvent::Handle" : "0",
+            "AnyEvent::WebSocket::Client" : "0.17",
+            "Carp" : "0",
+            "Protocol::WebSocket::Handshake::Server" : "0",
+            "Try::Tiny" : "0"
+         }
+      }
+   },
+   "provides" : {
+      "AnyEvent::WebSocket::Server" : {
+         "file" : "lib/AnyEvent/WebSocket/Server.pm",
+         "version" : "0.01"
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "repository" : {
+         "url" : "git://github.com/debug-ito/AnyEvent-WebSocket-Server.git"
+      }
+   },
+   "version" : "0.01"
+}

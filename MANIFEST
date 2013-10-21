@@ -19,3 +19,5 @@ xt/manifest.t
 xt/pod.t
 xt/synopsis.t
 xt/validator_example.t
+META.yml
+META.json
