@@ -7,6 +7,8 @@ use Protocol::WebSocket::Handshake::Server;
 use Try::Tiny;
 use AnyEvent::WebSocket::Connection;
 
+our $VERSION = "0.01";
+
 sub new {
     my ($class, %args) = @_;
     my $validator = $args{validator} || sub {};
