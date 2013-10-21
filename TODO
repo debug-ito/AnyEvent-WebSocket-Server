@@ -1,10 +1,20 @@
+Please open an issue on Github if you want me to finish these TODO
+items soon.
 
-- xt/js/browser.html: finish each test case with client's ws.close().
-  Currently this is not easy because the client won't close the TCP
-  connection immediately after ws.close().
+https://github.com/debug-ito/AnyEvent-WebSocket-Server
+
+
+- Add support for TLS/SSL. In fact section 10.6 in RFC 6455 states
+  "WebSocket implementations MUST support TLS".
 
 - Add "timeout" feature. The timeout is set between the TCP connection
   establishment and the complete of receiving WebSocket request. The
   timeout is the defence against the slow-request attack. However that
   kind of feature should be covered by the front-end Web server like
   Apache httpd or nginx, so it's not very important for this module.
+
+- xt/js/browser.html: finish each test case with client's ws.close().
+  Currently this is not easy because the client won't close the TCP
+  connection immediately after ws.close().
+
+
