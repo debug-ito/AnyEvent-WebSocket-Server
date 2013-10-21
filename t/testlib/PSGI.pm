@@ -25,8 +25,7 @@ sub _app {
         my $responder = shift;
         note("server enters streaming callback");
         $cv_server_finish->begin;
-        my $server_conn_cv = $server->establish_psgi($env);
-        $server_conn_cv->cb(sub {
+        $server->establish_psgi($env)->cb(sub {
             my $cv = shift;
             my ($conn, $validate_str) = try { $cv->recv };
             if(!$conn) {
@@ -43,8 +42,9 @@ sub _app {
             });
             $conn->on(finish => sub {
                 undef $conn;
-                $responder->([200, ['Content-Type' => 'text/plain', 'Connection' => 'close'], ['dummy response']]);
                 $cv_server_finish->end;
+                ## release the session held by the PSGI server.
+                $responder->([200, ['Content-Type' => 'text/plain', 'Connection' => 'close'], ['dummy response']]);
             });
         });
     };
@@ -69,15 +69,19 @@ sub run_tests {
     _test_case "normal echo", sub {
         my $conn = $client->connect("ws://127.0.0.1:$port/")->recv;
         note("client connection established");
-        my $cv = AnyEvent->condvar;
-        $conn->on(next_message => sub {
-            $cv->send($_[1]->body);
+        my @received = ();
+        $cv_server_finish->begin;
+        $conn->on(each_message => sub {
+            push(@received, $_[1]->body);
+        });
+        $conn->on(finish => sub {
+            $cv_server_finish->end;
         });
         $conn->send("foobar");
-        is($cv->recv, "foobar", "echo OK");
         $conn->close;
         $cv_server_finish->recv;
         pass("server connection shutdown");
+        is_deeply(\@received, ["foobar"], "received message OK");
     };
 
     _test_case "http fallback", sub {
