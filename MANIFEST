@@ -1,9 +1,23 @@
 Build.PL
 Changes
+cpanfile
 lib/AnyEvent/WebSocket/Server.pm
 MANIFEST			This list of files
-README
 t/00-load.t
-t/manifest.t
-t/pod-coverage.t
-t/pod.t
+t/connetion_active_close.t
+t/echo.t
+t/error.t
+t/multiple_connections.t
+t/psgi_corona.t
+t/psgi_twiggy.t
+t/testlib/PSGI.pm
+t/testlib/Util.pm
+t/validator.t
+xt/browser.t
+xt/js/browser.html
+xt/manifest.t
+xt/pod.t
+xt/synopsis.t
+xt/validator_example.t
+META.json
+META.yml

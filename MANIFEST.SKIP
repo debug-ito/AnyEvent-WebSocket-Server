@@ -5,3 +5,5 @@
 ^Build$
 ^blib
 ^MANIFEST\.
+^TODO$
+^README\.pod$

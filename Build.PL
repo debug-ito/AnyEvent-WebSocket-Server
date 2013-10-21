@@ -1,21 +1,26 @@
-use 5.006;
 use strict;
 use warnings;
-use Module::Build;
+use Module::Build::Pluggable (
+    'CPANfile'
+);
 
-my $builder = Module::Build->new(
+my $builder = Module::Build::Pluggable->new(
     module_name         => 'AnyEvent::WebSocket::Server',
     license             => 'perl',
     dist_author         => q{Toshio Ito <toshioito@cpan.org>},
     dist_version_from   => 'lib/AnyEvent/WebSocket/Server.pm',
-    build_requires => {
-        'Test::More' => 0,
-    },
-    requires => {
-        'perl' => 5.006,
-    },
     add_to_cleanup      => [ 'AnyEvent-WebSocket-Server-*' ],
-    create_makefile_pl => 'traditional',
+    recursive_test_files => 1,
+    no_index => {
+        directory => ["t", "xt", "eg", "inc"],
+        file => ['README.pod'],
+    },
+    meta_add => {
+        resources => {
+            repository => 'git://github.com/debug-ito/AnyEvent-WebSocket-Server.git'
+        }
+    }
+
 );
 
 $builder->create_build_script();
