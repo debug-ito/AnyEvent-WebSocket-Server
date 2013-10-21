@@ -93,6 +93,12 @@ sub establish_psgi {
 
 __END__
 
+=pod
+
+=head1 NAME
+
+AnyEvent::WebSocket::Server - WebSocket server for AnyEvent
+
 =head1 SYNOPSIS
 
     use AnyEvent::Socket qw(tcp_server);
