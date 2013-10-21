@@ -183,7 +183,7 @@ C<$conn_cv> will croak an error message.
 You can use C<$connection> to send and receive data through WebSocket. See L<AnyEvent::WebSocket::Connection> for detail.
 
 Note that even if C<$conn_cv> croaks, the connection socket C<$fh> remains intact.
-You have to close the socket manually if it's necessary.
+You can communicate with the client via C<$fh> unless the client has already closed it.
 
 =head2 $conn_cv = $sever->establish_psgi($psgi_env, [$fh])
 
