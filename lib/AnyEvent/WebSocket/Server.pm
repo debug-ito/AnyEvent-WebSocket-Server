@@ -239,6 +239,24 @@ The following server accepts WebSocket URLs such as C<ws://localhost:8080/2013/1
         });
     };
 
+=head1 SEE ALSO
+
+=over
+
+=item L<AnyEvent::WebSocket::Client>
+
+L<AnyEvent>-based WebSocket client implementation.
+
+=item L<Net::WebSocket::Server>
+
+Minimalistic stand-alone WebSocket server. It uses its own event loop mechanism.
+
+=item L<Net::Async::WebSocket>
+
+Stand-alone WebSocket server and client implementation using L<IO::Async>
+
+
+=back
 
 =head1 AUTHOR
 
