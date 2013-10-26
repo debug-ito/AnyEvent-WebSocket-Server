@@ -152,7 +152,7 @@ The validator is called like
 
     @validator_result = $validator->($request)
 
-where C<$request> is a C<Protocol::WebSocket::Request> object.
+where C<$request> is a L<Protocol::WebSocket::Request> object.
 
 If you reject the C<$request>, throw an exception.
 
@@ -193,7 +193,7 @@ You can use C<$connection> to send and receive data through WebSocket. See L<Any
 Note that even if C<$conn_cv> croaks, the connection socket C<$fh> remains intact.
 You can communicate with the client via C<$fh> unless the client has already closed it.
 
-=head2 $conn_cv = $sever->establish_psgi($psgi_env, [$fh])
+=head2 $conn_cv = $server->establish_psgi($psgi_env, [$fh])
 
 The same as C<establish()> method except that the request is in the form of L<PSGI> environment.
 B<This method is experimental. The API may change in the future.>
