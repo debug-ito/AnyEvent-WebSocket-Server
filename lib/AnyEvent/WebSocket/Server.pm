@@ -42,9 +42,12 @@ sub _do_handshake {
         ## half-immortal.
         try {
             if(!defined($handshake->parse($handle->{rbuf}))) {
-                die "handshake: error" . $handshake->error . "\n";
+                die "handshake error: " . $handshake->error . "\n";
             }
             return if !$handshake->is_done;
+            if($handshake->version ne "draft-ietf-hybi-17") {
+                die "handshake error: unsupported WebSocket protocol version " . $handshake->version . "\n";
+            }
             my @validator_result = $validator->($handshake->req);
             $handle->push_write($handshake->to_string);
             $cv_connection->send(AnyEvent::WebSocket::Connection->new(handle => $handle), @validator_result);
@@ -131,7 +134,19 @@ AnyEvent::WebSocket::Server - WebSocket server for AnyEvent
 =head1 DESCRIPTION
 
 This class is an implementation of the WebSocket server in an L<AnyEvent> context.
-This version does not support SSL/TLS.
+
+=over
+
+=item *
+
+Currently this module supports WebSocket protocol version 13 only. See L<RFC 6455|https://tools.ietf.org/html/rfc6455> for detail.
+
+=item *
+
+Currently this module does not support SSL/TLS.
+
+=back
+
 
 =head1 CLASS METHODS
 
