@@ -1,5 +1,11 @@
 Revision history for AnyEvent-WebSocket-Server
 
+0.03    2013-11-10
+        - No change to the code.
+        - Now the cpanfile requires AnyEvent::WebSocket::Client 0.20, which includes
+          some important new features and bug fixes.
+        - Improved author testing.
+
 0.02    2013-11-03
         - Documentation update.
         - Now it explicitly supports WebSocket protocol version 13 only.
