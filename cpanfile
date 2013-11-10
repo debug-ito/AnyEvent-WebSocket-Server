@@ -2,7 +2,7 @@
 requires "Carp";
 requires "Try::Tiny";
 requires "AnyEvent::Handle";
-requires "AnyEvent::WebSocket::Client", "0.17";
+requires "AnyEvent::WebSocket::Client", "0.20";
 requires "Protocol::WebSocket::Handshake::Server";
 
 on "test" => sub {
