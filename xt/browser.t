@@ -19,23 +19,27 @@ my $cv_finish = AnyEvent->condvar;
 my $cv_port = start_server 18888, sub {
     my ($fh) = @_;
     note("Connection established");
-    $cv_finish->begin;
     $server->establish($fh)->cb(sub {
         my $conn = shift->recv;
         $conn->on(each_message => sub {
-            my ($conn, $msg) = @_;
+            my ($inner_conn, $msg) = @_;
             my $size = length($msg->body);
             note("Message received: $size bytes");
             if($msg->body eq "QUIT") {
-                $conn->close();
+                $inner_conn->close();
+            }elsif($msg->body eq "UNDEF") {
+                undef $conn;
+            }elsif($msg->body eq "DONE_TESTING") {
+                note("DONE_TESTING received");
+                $inner_conn->close();
+                $cv_finish->send;
             }else {
-                $conn->send($msg);
+                $inner_conn->send($msg);
             }
         });
         $conn->on(finish => sub {
             note("Finish");
             undef $conn;
-            $cv_finish->end;
         });
         $conn->send("connected");
     });
