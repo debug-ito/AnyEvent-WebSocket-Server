@@ -1,5 +1,10 @@
 Revision history for AnyEvent-WebSocket-Server
 
+0.04    2014-04-13
+        - No change to the code.
+        - establish_psgi() method is no longer beta.
+          The API is fine, I guess.
+
 0.03    2013-11-10
         - No change to the code.
         - Now the cpanfile requires AnyEvent::WebSocket::Client 0.20, which includes
