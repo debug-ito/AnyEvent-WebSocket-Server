@@ -211,7 +211,6 @@ You can communicate with the client via C<$fh> unless the client has already clo
 =head2 $conn_cv = $server->establish_psgi($psgi_env, [$fh])
 
 The same as C<establish()> method except that the request is in the form of L<PSGI> environment.
-B<This method is experimental. The API may change in the future.>
 
 C<$psgi_env> is a L<PSGI> environment object obtained from a L<PSGI> server.
 C<$fh> is the connection filehandle.
