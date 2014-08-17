@@ -1,5 +1,9 @@
 Revision history for AnyEvent-WebSocket-Server
 
+0.05    2014-08-17
+        - No change to the code.
+        - Migrate to Module::Build::Prereqs::FromCPANfile.
+
 0.04    2014-04-13
         - No change to the code.
         - establish_psgi() method is no longer beta.
