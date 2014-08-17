@@ -1,9 +1,37 @@
+^_
+^\.
 ^MYMETA\.yml$
 ^MYMETA\.json$
-^\.git
 ^_build
 ^Build$
 ^blib
 ^MANIFEST\.
-^TODO$
 ^README\.pod$
+
+# Avoid version control files.
+\bRCS\b
+\bCVS\b
+,v$
+\B\.svn\b
+\b_darcs\b
+# (.git only in top-level, hence it's blocked above)
+ 
+# Avoid temp and backup files.
+~$
+\.tmp$
+\.old$
+\.bak$
+\..*?\.sw[po]$
+\#$
+\b\.#
+ 
+# avoid OS X finder files
+\.DS_Store$
+ 
+# ditto for Windows
+\bdesktop\.ini$
+\b[Tt]humbs\.db$
+ 
+# Avoid patch remnants
+\.orig$
+\.rej$

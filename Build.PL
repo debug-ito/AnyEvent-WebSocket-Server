@@ -1,26 +1,39 @@
+use 5.006;
 use strict;
 use warnings;
-use Module::Build::Pluggable (
-    'CPANfile'
-);
-
-my $builder = Module::Build::Pluggable->new(
+use Module::Build;
+use Module::Build::Prereqs::FromCPANfile;
+ 
+Module::Build->new(
     module_name         => 'AnyEvent::WebSocket::Server',
     license             => 'perl',
     dist_author         => q{Toshio Ito <toshioito@cpan.org>},
     dist_version_from   => 'lib/AnyEvent/WebSocket/Server.pm',
-    add_to_cleanup      => [ 'AnyEvent-WebSocket-Server-*' ],
+    release_status      => 'stable',
+    add_to_cleanup     => [ 'AnyEvent-WebSocket-Server-*' ],
     recursive_test_files => 1,
+    dynamic_config => 1,
+    (-d "share") ? (share_dir => "share") : (),
+    
+    mb_prereqs_from_cpanfile(),
+    
     no_index => {
         directory => ["t", "xt", "eg", "inc"],
         file => ['README.pod'],
     },
     meta_add => {
+        'meta-spec' => {
+            version => 2,
+            url => 'https://metacpan.org/pod/CPAN::Meta::Spec',
+        },
         resources => {
-            repository => 'git://github.com/debug-ito/AnyEvent-WebSocket-Server.git'
+            bugtracker => {
+                web => 'https://github.com/debug-ito/AnyEvent-WebSocket-Server/issues',
+            },
+            repository => {
+                url => 'git://github.com/debug-ito/AnyEvent-WebSocket-Server.git',
+                web => 'https://github.com/debug-ito/AnyEvent-WebSocket-Server',
+            },
         }
     }
-
-);
-
-$builder->create_build_script();
+)->create_build_script();
