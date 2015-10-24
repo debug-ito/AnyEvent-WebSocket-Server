@@ -158,7 +158,26 @@ Fields in C<%args> are:
 
 =over
 
+=item C<handshake> => CODE (optional)
+
+A subroutine reference to customize the handshake process.
+You can use this option to validate and preprocess the request and customize the handshake response.
+
+For each request, the handshake code is called like
+
+    ($response, @other_results) = $handshake->($request, $default_response)
+
+where C<$request> is a L<Protocol::WebSocket::Request> object,
+and C<$default_response> is a L<Protocol::WebSocket::Response> object.
+The C<$handshake> must return C<$response>. C<@other_results> are optional.
+
+C<$default_response> 
+
+
 =item C<validator> => CODE (optional)
+
+B<< This option is only for backward compatibility. Use C<handshake> option instead. >>
+If C<handshake> option is specified, this option is B<ignored>.
 
 A subroutine reference to validate the incoming WebSocket request.
 If omitted, it accepts the request.
