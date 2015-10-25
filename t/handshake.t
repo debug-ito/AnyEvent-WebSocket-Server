@@ -174,7 +174,9 @@ sub handshake_error_case {
     my $port = start_passive_server($s, sub { $finish_cv->send })->recv;
     my $raw_res = get_raw_response($port, "/hogehoge")->recv;
     $finish_cv->recv;
-    like $raw_res, qr{^HTTP/1\.[10] 101 Upgrade}i, "Upgrade status line OK";
+    note("Response:");
+    note($raw_res);
+    like $raw_res, qr{^HTTP/1\.[10] 101}i, "101 status line OK";
     like $raw_res, qr{^Sec-WebSocket-Protocol\s*:\s*mytest\.subprotocol}im, "subprotocol is set OK";
 }
 
@@ -191,6 +193,8 @@ sub handshake_error_case {
     my $port = start_passive_server($s, sub { $finish_cv->send })->recv;
     my $raw_res = get_raw_response($port, "/foobar")->recv;
     $finish_cv->recv;
+    note("Response:");
+    note($raw_res);
     is $raw_res, $input_response, "raw response OK";
 }
 
