@@ -11,12 +11,18 @@ our $VERSION = "0.05";
 
 sub new {
     my ($class, %args) = @_;
-    my $validator = $args{validator} || sub {};
-    if(ref($validator) ne "CODE") {
+    my $validator = $args{validator};
+    if(defined($validator) && ref($validator) ne "CODE") {
         croak "validator parameter must be a code-ref";
     }
+    my $handshake = defined($args{handshake}) ? $args{handshake}
+        : defined($validator) ? sub { my ($req, $res) = @_; return ($res, $validator->($req)); }
+        : sub { $_[1] };
+    if(ref($handshake) ne "CODE") {
+        croak "handshake parameter must be a code-ref";
+    }
     my $self = bless {
-        validator => $validator
+        handshake => $handshake,
     }, $class;
     return $self;
 }
@@ -34,7 +40,7 @@ sub _create_on_error {
 }
 
 sub _do_handshake {
-    my ($cv_connection, $fh, $handshake, $validator) = @_;
+    my ($cv_connection, $fh, $handshake, $handshake_code) = @_;
     my $handle = AnyEvent::Handle->new(fh => $fh, on_error => _create_on_error($cv_connection));
     my $read_cb = sub {
         ## We don't receive handle object as an argument here. $handle
@@ -48,9 +54,15 @@ sub _do_handshake {
             if($handshake->version ne "draft-ietf-hybi-17") {
                 die "handshake error: unsupported WebSocket protocol version " . $handshake->version . "\n";
             }
-            my @validator_result = $validator->($handshake->req);
-            $handle->push_write($handshake->to_string);
-            $cv_connection->send(AnyEvent::WebSocket::Connection->new(handle => $handle), @validator_result);
+            my ($res, @other_results) = $handshake_code->($handshake->req, $handshake->res);
+            if(!defined($res)) {
+                croak "handshake response was undef";
+            }
+            if(ref($res) eq "Protocol::WebSocket::Response") {
+                $res = $res->to_string;
+            }
+            $handle->push_write("$res");
+            $cv_connection->send(AnyEvent::WebSocket::Connection->new(handle => $handle), @other_results);
             undef $handle;
             undef $cv_connection;
         }catch {
@@ -73,7 +85,7 @@ sub establish {
         return $cv_connection;
     }
     my $handshake = Protocol::WebSocket::Handshake::Server->new;
-    _do_handshake($cv_connection, $fh, $handshake, $self->{validator});
+    _do_handshake($cv_connection, $fh, $handshake, $self->{handshake});
     return $cv_connection;
 }
 
@@ -90,7 +102,7 @@ sub establish_psgi {
         return $cv_connection;
     }
     my $handshake = Protocol::WebSocket::Handshake::Server->new_from_psgi($env);
-    _do_handshake($cv_connection, $fh, $handshake, $self->{validator});
+    _do_handshake($cv_connection, $fh, $handshake, $self->{handshake});
     return $cv_connection;
 }
 
