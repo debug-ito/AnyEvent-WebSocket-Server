@@ -198,7 +198,7 @@ If omitted, it accepts the request.
 
 The validator is called like
 
-    @validator_result = $validator->($request)
+    @other_results = $validator->($request)
 
 where C<$request> is a L<Protocol::WebSocket::Request> object.
 
@@ -220,11 +220,11 @@ C<$fh> is a filehandle for a connection socket, which is usually obtained by C<t
 
 Return value C<$conn_cv> is an L<AnyEvent> condition variable.
 
-In success, C<< $conn_cv->recv >> returns an L<AnyEvent::WebSocket::Connection> object and additional values returned by the validator.
-In failure (e.g. the client sent a totally invalid request or your validator threw an exception),
+In success, C<< $conn_cv->recv >> returns an L<AnyEvent::WebSocket::Connection> object and C<@other_results> returned by the handshake process.
+In failure (e.g. the client sent a totally invalid request or your handshake process threw an exception),
 C<$conn_cv> will croak an error message.
 
-    ($connection, @validator_result) = eval { $conn_cv->recv };
+    ($connection, @other_results) = eval { $conn_cv->recv };
     
     ## or in scalar context, it returns $connection only.
     $connection = eval { $conn_cv->recv };
