@@ -20,16 +20,22 @@ use AnyEvent::Socket qw(tcp_server);
 use AnyEvent::WebSocket::Server;
 
 my $server = AnyEvent::WebSocket::Server->new(
-    validator => sub {
-        my ($req) = @_;  ## Protocol::WebSocket::Request
-        
+    handshake => sub {
+        my ($req, $res) = @_;
+        ## $req is a Protocol::WebSocket::Request
+        ## $res is a Protocol::WebSocket::Response
+
+        ## validating and parsing request.
         my $path = $req->resource_name;
         die "Invalid format" if $path !~ m{^/(\d{4})/(\d{2})};
         
         my ($year, $month) = ($1, $2);
         die "Invalid month" if $month <= 0 || $month > 12;
 
-        return ($year, $month);
+        ## setting WebSocket subprotocol in response
+        $res->subprotocol("mytest");
+        
+        return ($res, $year, $month);
     }
 );
 

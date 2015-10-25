@@ -251,7 +251,7 @@ If C<$fh> is omitted, C<< $psgi_env->{"psgix.io"} >> is used for the connection 
 
 =head1 EXAMPLES
 
-=head2 Validator option
+=head2 handshake option
 
 The following server accepts WebSocket URLs such as C<ws://localhost:8080/2013/10>.
 
@@ -259,16 +259,22 @@ The following server accepts WebSocket URLs such as C<ws://localhost:8080/2013/1
     use AnyEvent::WebSocket::Server;
     
     my $server = AnyEvent::WebSocket::Server->new(
-        validator => sub {
-            my ($req) = @_;  ## Protocol::WebSocket::Request
-            
+        handshake => sub {
+            my ($req, $res) = @_;
+            ## $req is a Protocol::WebSocket::Request
+            ## $res is a Protocol::WebSocket::Response
+    
+            ## validating and parsing request.
             my $path = $req->resource_name;
             die "Invalid format" if $path !~ m{^/(\d{4})/(\d{2})};
             
             my ($year, $month) = ($1, $2);
             die "Invalid month" if $month <= 0 || $month > 12;
     
-            return ($year, $month);
+            ## setting WebSocket subprotocol in response
+            $res->subprotocol("mytest");
+            
+            return ($res, $year, $month);
         }
     );
     
