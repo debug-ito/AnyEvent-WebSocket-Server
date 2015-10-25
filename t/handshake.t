@@ -59,6 +59,35 @@ sub get_raw_response {
     return $raw_response_cv;
 }
 
+sub handshake_error_case {
+    my (%args) = @_;
+    my $handshake = $args{handshake};
+    my $exp_error_pattern = $args{exp_error_pattern};
+    my $label = $args{label};
+    note("--- $label");
+    my $s = AnyEvent::WebSocket::Server->new(
+        handshake => $handshake
+    );
+    my $finish_cv = AnyEvent->condvar;
+    my $port_cv = start_server sub {
+        my ($fh) = @_;
+        $s->establish($fh)->cb(sub {
+            my ($conn) = eval { shift->recv };
+            like $@, $exp_error_pattern, $label;
+            is $conn, undef;
+            shutdown $fh, 0;
+            undef $fh;
+            $finish_cv->send;
+        });
+    };
+    my $port = $port_cv->recv;
+    my $client_conn_cv = AnyEvent::WebSocket::Client->new->connect("ws://127.0.0.1:$port/hoge");
+    $finish_cv->recv;
+    my ($client_conn) = eval { $client_conn_cv->recv };
+    is $client_conn, undef, "client connection should not be obtained";
+}
+
+
 {
     note("--- basic IO");
     my $called = 0;
@@ -149,8 +178,32 @@ sub get_raw_response {
     like $raw_res, qr{^Sec-WebSocket-Protocol\s*:\s*mytest\.subprotocol}im, "subprotocol is set OK";
 }
 
-fail("throw exception");
-fail("raw response");
-fail("undef response");
+{
+    note("raw response");
+    my $input_response = "This must be rejected by the client\r\n\r\n";
+    my $s = AnyEvent::WebSocket::Server->new(
+        handshake => sub {
+            my ($req, $res) = @_;
+            return "This must be rejected by the client\r\n\r\n";
+        }
+    );
+    my $finish_cv = AnyEvent->condvar;
+    my $port = start_passive_server($s, sub { $finish_cv->send })->recv;
+    my $raw_res = get_raw_response($port, "/foobar")->recv;
+    $finish_cv->recv;
+    is $raw_res, $input_response, "raw response OK";
+}
+
+handshake_error_case(
+    label => "throw exception",
+    handshake => sub { die "BOOM!" },
+    exp_error_pattern => qr/BOOM\!/,
+);
+
+handshake_error_case(
+    label => "no return",
+    handshake => sub { return () },
+    exp_error_pattern => qr/handshake response was undef/i,
+);
 
 done_testing;
