@@ -161,7 +161,7 @@ Fields in C<%args> are:
 =item C<handshake> => CODE (optional)
 
 A subroutine reference to customize the handshake process.
-You can use this option to validate and preprocess the request and customize the handshake response.
+You can use this option to validate and preprocess the handshake request and customize the handshake response.
 
 For each request, the handshake code is called like
 
@@ -169,15 +169,29 @@ For each request, the handshake code is called like
 
 where C<$request> is a L<Protocol::WebSocket::Request> object,
 and C<$default_response> is a L<Protocol::WebSocket::Response> object.
-The C<$handshake> must return C<$response>. C<@other_results> are optional.
+The C<$handshake> code must return C<$response>. C<@other_results> are optional.
 
-C<$default_response> 
+The return value C<$response> is the response returned to the client.
+It must be either a L<Protocol::WebSocket::Response> object,
+or a string of a valid HTTP response (including the Status-Line, the Headers and the Body).
+
+The argument C<$default_response> is a L<Protocol::WebSocket::Response> valid for the given C<$request>.
+If you don't need to manipulate the response, just return C<$default_response>. That is,
+
+    handshake => sub { $_[1] }
+
+is the minimal valid code for C<handshake>.
+
+In addition to C<$response>, you can return C<@other_results> if you want.
+Those C<@other_results> can be obtained later from the condition variable of C<establish()> method.
+
+If you throw an exception from C<$handshake> code, we think you reject the C<$request>.
+In this case, the condition variable of C<establish()> method croaks.
 
 
 =item C<validator> => CODE (optional)
 
-B<< This option is only for backward compatibility. Use C<handshake> option instead. >>
-If C<handshake> option is specified, this option is B<ignored>.
+B<< This option is only for backward compatibility. Use C<handshake> option instead. If C<handshake> option is specified, this option is ignored. >>
 
 A subroutine reference to validate the incoming WebSocket request.
 If omitted, it accepts the request.
