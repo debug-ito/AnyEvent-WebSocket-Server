@@ -172,7 +172,7 @@ Fields in C<%args> are:
 
 =item C<handshake> => CODE (optional)
 
-A subroutine reference to customize the handshake process.
+A subroutine reference to customize the WebSocket handshake process.
 You can use this option to validate and preprocess the handshake request and customize the handshake response.
 
 For each request, the handshake code is called like
@@ -183,7 +183,7 @@ where C<$request> is a L<Protocol::WebSocket::Request> object,
 and C<$default_response> is a L<Protocol::WebSocket::Response> object.
 The C<$handshake> code must return C<$response>. C<@other_results> are optional.
 
-The return value C<$response> is the response returned to the client.
+The return value C<$response> is the handshake response returned to the client.
 It must be either a L<Protocol::WebSocket::Response> object,
 or a string of a valid HTTP response (including the Status-Line, the Headers and the Body).
 
@@ -326,6 +326,10 @@ Stand-alone WebSocket server and client implementation using L<IO::Async>
 =head1 AUTHOR
 
 Toshio Ito, C<< <toshioito at cpan.org> >>
+
+=head1 CONTRIBUTORS
+
+mephinet (Philipp Gortan)
 
 =head1 REPOSITORY
 
