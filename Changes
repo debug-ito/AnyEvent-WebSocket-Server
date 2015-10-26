@@ -1,5 +1,9 @@
 Revision history for AnyEvent-WebSocket-Server
 
+0.06    2015-10-27
+        [ENHANCEMENT]
+        - add "handshake" option. (gh#1 by mephinet)
+
 0.05    2014-08-17
         - No change to the code.
         - Migrate to Module::Build::Prereqs::FromCPANfile.
