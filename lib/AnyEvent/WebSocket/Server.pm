@@ -153,10 +153,6 @@ This class is an implementation of the WebSocket server in an L<AnyEvent> contex
 
 Currently this module supports WebSocket protocol version 13 only. See L<RFC 6455|https://tools.ietf.org/html/rfc6455> for detail.
 
-=item *
-
-Currently this module does not support SSL/TLS.
-
 =back
 
 
@@ -218,6 +214,22 @@ If you reject the C<$request>, throw an exception.
 
 If you accept the C<$request>, don't throw any exception.
 The return values of the C<$validator> are sent to the condition variable of C<establish()> method.
+
+=item C<ssl_key_file> => FILE_PATH (optional)
+
+A string of the filepath to the SSL/TLS private key file in PEM format.
+If you set this option, you have to set C<ssl_cert_file> option, too.
+
+If this option or C<ssl_cert_file> option is set, L<AnyEvent::WebSocket::Server> encrypts the WebSocket streams with SSL/TLS.
+
+=item C<ssl_cert_file> => FILE_PATH (optional)
+
+A string of the filepath to the SSL/TLS certificate file in PEM format.
+
+The file may contain both the certificate and corresponding private key. In that case, C<ssl_key_file> may be omitted.
+
+If this option is set, L<AnyEvent::WebSocket::Server> encrypts the WebSocket streams with SSL/TLS.
+
 
 =back
 
