@@ -22,12 +22,43 @@ sub all_conn_configs {
             scheme => "ws",
             address => "127.0.0.1"
         ),
-        ## TODO: create private key / certificate pair.
-        ## 
-        ## $class->new(
-        ##     label => "wss",
-        ##     server_args => [...]
-        ## )
+        
+        $class->_new(
+            label => "conn:wss, separate",
+            server_args => [
+                ssl_key_file => "t/data/ssl_test.key",
+                ssl_cert_file => "t/data/ssl_test.crt"
+            ],
+            client_args => [
+                ssl_ca_file => "t/data/ssl_test.crt"
+            ],
+            client_handle_base => [
+                tls => "connect",
+                tls_ctx => {
+                    ca_file => "t/data/ssl_test.crt"
+                }
+            ],
+            scheme => "wss",
+            address => "127.0.0.1",
+        ),
+        
+        $class->_new(
+            label => "conn:wss, combined",
+            server_args => [
+                ssl_cert_file => "t/data/ssl_test.combined.key",
+            ],
+            client_args => [
+                ssl_ca_file => "t/data/ssl_test.crt"
+            ],
+            client_handle_base => [
+                tls => "connect",
+                tls_ctx => {
+                    ca_file => "t/data/ssl_test.crt"
+                }
+            ],
+            scheme => "wss",
+            address => "127.0.0.1"
+        )
     );
 }
 
