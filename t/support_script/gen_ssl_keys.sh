@@ -22,3 +22,5 @@ openssl genrsa 2024 > $keybase.key
 echo "Generating $keybase.crt"
 openssl req -new -key $keybase.key | openssl x509 -days 100000 -req -signkey $keybase.key > $keybase.crt
 
+echo "Generating $keybase.combined.key"
+cat $keybase.key $keybase.crt > $keybase.combined.key
