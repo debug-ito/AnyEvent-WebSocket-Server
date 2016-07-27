@@ -113,6 +113,8 @@ establish_error_case(
             ## the TLS context inside the AE::WS::Server (more
             ## specifically, AE::Handle in it). So we just end the
             ## test.
+            shutdown $server_fh, 2;
+            undef $server_fh;
             $handle->push_shutdown();
             $cv_client_finish->recv;
         }else {
