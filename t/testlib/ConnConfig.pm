@@ -92,4 +92,9 @@ sub connect_url {
     return qq{$self->{scheme}://$self->{address}$port_str$path_str};
 }
 
+sub is_plain_socket_transport {
+    my ($self) = @_;
+    return ($self->{scheme} eq "ws");
+}
+
 1;
