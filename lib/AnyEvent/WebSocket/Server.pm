@@ -23,6 +23,7 @@ sub new {
     }
     my $self = bless {
         handshake => $handshake,
+        map { ($_ => $args{$_}) } qw(ssl_key_file ssl_cert_file),
     }, $class;
     return $self;
 }
@@ -39,9 +40,30 @@ sub _create_on_error {
     };
 }
 
+sub _handle_args_tls {
+    my ($self) = @_;
+    if(!defined($self->{ssl_key_file}) && !defined($self->{ssl_cert_file})) {
+        return ();
+    }
+    if(!defined($self->{ssl_cert_file})) {
+        croak "Only ssl_key_file is specified. You need to specify ssl_cert_file, too.";
+    }
+    return (
+        tls => "accept",
+        tls_ctx => {
+            cert_file => $self->{ssl_cert_file},
+            defined($self->{ssl_key_file}) ? (key_file => $self->{ssl_key_file}) : ()
+        }
+    );
+}
+
 sub _do_handshake {
-    my ($cv_connection, $fh, $handshake, $handshake_code) = @_;
-    my $handle = AnyEvent::Handle->new(fh => $fh, on_error => _create_on_error($cv_connection));
+    my ($self, $cv_connection, $fh, $handshake) = @_;
+    my $handshake_code = $self->{handshake};
+    my $handle = AnyEvent::Handle->new(
+        $self->_handle_args_tls,
+        fh => $fh, on_error => _create_on_error($cv_connection)
+    );
     my $read_cb = sub {
         ## We don't receive handle object as an argument here. $handle
         ## is imported in this closure so that $handle becomes
@@ -85,7 +107,7 @@ sub establish {
         return $cv_connection;
     }
     my $handshake = Protocol::WebSocket::Handshake::Server->new;
-    _do_handshake($cv_connection, $fh, $handshake, $self->{handshake});
+    $self->_do_handshake($cv_connection, $fh, $handshake);
     return $cv_connection;
 }
 
@@ -102,7 +124,7 @@ sub establish_psgi {
         return $cv_connection;
     }
     my $handshake = Protocol::WebSocket::Handshake::Server->new_from_psgi($env);
-    _do_handshake($cv_connection, $fh, $handshake, $self->{handshake});
+    $self->_do_handshake($cv_connection, $fh, $handshake);
     return $cv_connection;
 }
 
