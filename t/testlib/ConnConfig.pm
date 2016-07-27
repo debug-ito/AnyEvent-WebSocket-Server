@@ -68,7 +68,7 @@ sub all_conn_configs {
 sub for_all_ok_conn_configs {
     my ($class, $code) = @_;
     foreach my $cconfig (grep { $_->is_ok } $class->all_conn_configs) {
-        subtest $cconfig->label, { $code->($cconfig) };
+        subtest $cconfig->label, sub { $code->($cconfig) };
     }
 }
 

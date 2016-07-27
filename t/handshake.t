@@ -64,32 +64,32 @@ sub handshake_error_case {
     my $handshake = $args{handshake};
     my $exp_error_pattern = $args{exp_error_pattern};
     my $label = $args{label};
-    note("--- $label");
-    my $s = AnyEvent::WebSocket::Server->new(
-        handshake => $handshake
-    );
-    my $finish_cv = AnyEvent->condvar;
-    my $port_cv = start_server sub {
-        my ($fh) = @_;
-        $s->establish($fh)->cb(sub {
-            my ($conn) = eval { shift->recv };
-            like $@, $exp_error_pattern, $label;
-            is $conn, undef;
-            shutdown $fh, 0;
-            undef $fh;
-            $finish_cv->send;
-        });
+    subtest $label, sub {
+        my $s = AnyEvent::WebSocket::Server->new(
+            handshake => $handshake
+        );
+        my $finish_cv = AnyEvent->condvar;
+        my $port_cv = start_server sub {
+            my ($fh) = @_;
+            $s->establish($fh)->cb(sub {
+                my ($conn) = eval { shift->recv };
+                like $@, $exp_error_pattern, $label;
+                is $conn, undef;
+                shutdown $fh, 0;
+                undef $fh;
+                $finish_cv->send;
+            });
+        };
+        my $port = $port_cv->recv;
+        my $client_conn_cv = AnyEvent::WebSocket::Client->new->connect("ws://127.0.0.1:$port/hoge");
+        $finish_cv->recv;
+        my ($client_conn) = eval { $client_conn_cv->recv };
+        is $client_conn, undef, "client connection should not be obtained";
     };
-    my $port = $port_cv->recv;
-    my $client_conn_cv = AnyEvent::WebSocket::Client->new->connect("ws://127.0.0.1:$port/hoge");
-    $finish_cv->recv;
-    my ($client_conn) = eval { $client_conn_cv->recv };
-    is $client_conn, undef, "client connection should not be obtained";
 }
 
 
-{
-    note("--- basic IO");
+subtest "basic IO", sub {
     my $called = 0;
     my $s = AnyEvent::WebSocket::Server->new(
         handshake => sub {
@@ -107,10 +107,9 @@ sub handshake_error_case {
     $client_conn->close;
     $finish_cv->recv;
     ok $called;
-}
+};
 
-{
-    note("--- handshake is called for each request");
+subtest "handshake is called for each request", sub {
     my @resource_names = ();
     my $s = AnyEvent::WebSocket::Server->new(
         handshake => sub {
@@ -131,10 +130,9 @@ sub handshake_error_case {
         $finish_cv->recv;
         is_deeply \@resource_names, [$path], "request resource name should be '$path'";
     }
-}
+};
 
-{
-    note("-- other_results");
+subtest "other_results", sub {
     my $s = AnyEvent::WebSocket::Server->new(
         handshake => sub {
             my ($req, $res) = @_;
@@ -159,10 +157,9 @@ sub handshake_error_case {
     $client_conn->close;
     $finish_cv->recv;
     is_deeply \@got_other_results, ["hoge", 256, "/HOGE"];
-}
+};
 
-{
-    note("--- response with subprotocol");
+subtest "response with subprotocol", sub {
     my $s = AnyEvent::WebSocket::Server->new(
         handshake => sub {
             my ($req, $res) = @_;
@@ -178,10 +175,9 @@ sub handshake_error_case {
     note($raw_res);
     like $raw_res, qr{^HTTP/1\.[10] 101}i, "101 status line OK";
     like $raw_res, qr{^Sec-WebSocket-Protocol\s*:\s*mytest\.subprotocol}im, "subprotocol is set OK";
-}
+};
 
-{
-    note("raw response");
+subtest "raw response", sub {
     my $input_response = "This must be rejected by the client\r\n\r\n";
     my $s = AnyEvent::WebSocket::Server->new(
         handshake => sub {
@@ -196,7 +192,7 @@ sub handshake_error_case {
     note("Response:");
     note($raw_res);
     is $raw_res, $input_response, "raw response OK";
-}
+};
 
 handshake_error_case(
     label => "throw exception",

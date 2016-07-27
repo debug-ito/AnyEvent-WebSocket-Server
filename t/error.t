@@ -15,34 +15,33 @@ set_timeout;
 sub establish_error_case {
     my (%args) = @_;
     my ($label, $code) = @args{qw(label code)};
-    note("--- $label");
-    if(defined($args{skip})) {
-        note("skipped: $args{skip}");
-        return;
-    }
-    my $cv_finish = AnyEvent->condvar;
+    subtest $label, sub {
+        if(defined($args{skip})) {
+            plan skip_all => $args{skip};
+        }
+        my $cv_finish = AnyEvent->condvar;
     
-    my $server = AnyEvent::WebSocket::Server->new();
-    my $cv_port = start_server sub {
-        my ($fh) = @_;
-        $server->establish($fh)->cb(sub {
-            my $cv_conn = shift;
-            try {
-                $cv_conn->recv;
-                fail("establish() should fail");
-                $cv_finish->croak("establish() should fail");
-            }catch {
-                my $e = shift;
-                $cv_finish->send($e, $fh);
-            };
-        });
+        my $server = AnyEvent::WebSocket::Server->new();
+        my $cv_port = start_server sub {
+            my ($fh) = @_;
+            $server->establish($fh)->cb(sub {
+                my $cv_conn = shift;
+                try {
+                    $cv_conn->recv;
+                    fail("establish() should fail");
+                    $cv_finish->croak("establish() should fail");
+                }catch {
+                    my $e = shift;
+                    $cv_finish->send($e, $fh);
+                };
+            });
+        };
+        my $port = $cv_port->recv;
+        $code->($cv_finish, $port);
     };
-    my $port = $cv_port->recv;
-    $code->($cv_finish, $port);
 }
 
-{
-    note("--- give undef as fh");
+subtest "give undef as fh", sub {
     my $server = AnyEvent::WebSocket::Server->new;
     my $cv_conn = $server->establish(undef);
     try {
@@ -51,7 +50,7 @@ sub establish_error_case {
     }catch {
         pass("establish should fail.");
     };
-}
+};
 
 establish_error_case(
     label => "client closes the connection while sending the handshake request",
@@ -158,8 +157,7 @@ establish_error_case(
 ## server thinks that the WebSocket connection is established, but
 ## disconnected immediately.
 
-{
-    note("--- After handshake, client disconnects while sending a frame");
+subtest "After handshake, client disconnects while sending a frame", sub {
     my $server = AnyEvent::WebSocket::Server->new;
     my @got_messages = ();
     my $cv_finish = AnyEvent->condvar;
@@ -208,7 +206,7 @@ establish_error_case(
 
     $cv_finish->recv;
     is_deeply(\@got_messages, ["Hello, "], "only the first message should be received. the partial message should be discarded.");
-}
+};
 
 done_testing;
 

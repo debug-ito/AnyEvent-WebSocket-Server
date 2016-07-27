@@ -47,26 +47,27 @@ foreach my $case (
     {label => "invalid ID", path => '/user/102', exp => {error => qr/^invalid user ID/}},
     {label => "invalid path format", path => '/2013/10/19', exp => {error => qr/^invalid format/}},
 ) {
-    my $cv_close = AnyEvent->condvar;
-    @results = ();
-    try {
-        my $conn = $client->connect("ws://127.0.0.1:$port$case->{path}")->recv;
-        note("connection OK");
-        $conn->on(finish => sub { undef $conn; $cv_close->send });
-        $conn->close;
-    }catch {
-        note("connection error");
-        $cv_close->send;
+    subtest $case->{label}, sub {
+        my $cv_close = AnyEvent->condvar;
+        @results = ();
+        try {
+            my $conn = $client->connect("ws://127.0.0.1:$port$case->{path}")->recv;
+            note("connection OK");
+            $conn->on(finish => sub { undef $conn; $cv_close->send });
+            $conn->close;
+        }catch {
+            note("connection error");
+            $cv_close->send;
+        };
+        $cv_close->recv;
+        note("connection finish");
+        is(scalar(@results), 1, "$case->{label}: there should be only one connection");
+        if($case->{exp}{error}) {
+            like($results[0]{error}, $case->{exp}{error}, "$case->{label}: connection error OK");
+        }else {
+            is_deeply(\@results, [$case->{exp}], "$case->{label}: connection success OK");
+        }
     };
-    $cv_close->recv;
-    note("connection finish");
-    is(scalar(@results), 1, "$case->{label}: there should be only one connection");
-    if($case->{exp}{error}) {
-        like($results[0]{error}, $case->{exp}{error}, "$case->{label}: connection error OK");
-    }else {
-        is_deeply(\@results, [$case->{exp}], "$case->{label}: connection success OK");
-    }
-    
 }
 
 done_testing();

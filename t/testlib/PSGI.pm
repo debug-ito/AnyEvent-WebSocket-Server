@@ -52,9 +52,10 @@ sub _app {
 
 sub _test_case {
     my ($label, $code) = @_;
-    note("--- $label");
-    $cv_server_finish = AnyEvent->condvar;
-    $code->();
+    subtest $label, sub {
+        $cv_server_finish = AnyEvent->condvar;
+        $code->();
+    };
 }
 
 sub run_tests {
