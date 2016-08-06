@@ -61,13 +61,49 @@ sub all_conn_configs {
             ],
             scheme => "wss",
             address => "127.0.0.1"
-        )
+        ),
+
+        $class->_new(
+            label => "client: tls, server: plain",
+            is_ok => 0,
+            server_args => [],
+            client_args => [
+                ssl_ca_file => "t/data/ssl_test.crt"
+            ],
+            client_handle_base => [
+                tls => "connect",
+                tls_ctx => {
+                    ca_file => "t/data/ssl_test.crt"
+                }
+            ],
+            scheme => "wss",
+            address => "127.0.0.1",
+        ),
+
+        $class->_new(
+            label => "client: plain, server: tls",
+            is_ok => 0,
+            server_args => [
+                ssl_cert_file => "t/data/ssl_test.combined.key",
+            ],
+            client_args => [],
+            client_handle_base => [],
+            scheme => "ws",
+            address => "127.0.0.1"
+        ),
     );
 }
 
 sub for_all_ok_conn_configs {
     my ($class, $code) = @_;
     foreach my $cconfig (grep { $_->is_ok } $class->all_conn_configs) {
+        subtest $cconfig->label, sub { $code->($cconfig) };
+    }
+}
+
+sub for_all_ng_conn_configs {
+    my ($class, $code) = @_;
+    foreach my $cconfig (grep { !$_->is_ok } $class->all_conn_configs) {
         subtest $cconfig->label, sub { $code->($cconfig) };
     }
 }
