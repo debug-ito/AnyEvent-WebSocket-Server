@@ -20,13 +20,17 @@ testlib::ConnConfig->for_all_ng_conn_configs(sub {
     my $server_conn_cv = AnyEvent->condvar;
     my $port_cv = start_server sub {
         my ($fh) = @_;
-        try {
-            $server->establish($fh)->recv;
-            $server_conn_cv->send(undef);
-        }catch {
-            my ($e) = @_;
-            $server_conn_cv->send($e);
-        };
+        $server->establish($fh)->cb(sub {
+            my ($cv) = @_;
+            undef $fh;
+            try {
+                $cv->recv;
+                $server_conn_cv->send(undef);
+            }catch {
+                my ($e) = @_;
+                $server_conn_cv->send($e);
+            }
+        });
     };
     my $port = $port_cv->recv;
     my $client_conn_cv = AnyEvent::WebSocket::Client->new($cconfig->client_args)->connect($cconfig->connect_url($port, "/websocket"));
