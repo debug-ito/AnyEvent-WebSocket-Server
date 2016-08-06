@@ -1,5 +1,13 @@
 Revision history for AnyEvent-WebSocket-Server
 
+0.07    2016-08-06
+        [ENHANCEMENT]
+        - Add "ssl_key_file" and "ssl_cert_file" options.
+          Now this module officially supports TLS (gh #2 by izarraga)
+          
+        [PACKAGING]
+        - Require AnyEvent::WebSocket::Client 0.35. It has a bug fix for TLS mode.
+
 0.06    2015-10-27
         [ENHANCEMENT]
         - add "handshake" option. (gh#1 by mephinet)

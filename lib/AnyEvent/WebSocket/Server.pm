@@ -7,7 +7,7 @@ use Protocol::WebSocket::Handshake::Server;
 use Try::Tiny;
 use AnyEvent::WebSocket::Connection;
 
-our $VERSION = "0.06";
+our $VERSION = "0.07";
 
 sub new {
     my ($class, %args) = @_;
