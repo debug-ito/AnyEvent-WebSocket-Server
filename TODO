@@ -4,9 +4,6 @@ items soon.
 https://github.com/debug-ito/AnyEvent-WebSocket-Server
 
 
-- Add support for TLS/SSL. In fact section 10.6 in RFC 6455 states
-  "WebSocket implementations MUST support TLS".
-
 - Add "timeout" feature. The timeout is set between the TCP connection
   establishment and the complete of receiving WebSocket request. The
   timeout is the defence against the slow-request attack. However that
