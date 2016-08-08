@@ -94,17 +94,28 @@ sub all_conn_configs {
     );
 }
 
+sub _run_code {
+    my ($self, $code) = @_;
+    subtest $self->label, sub {
+        if(!$self->is_plain_socket_transport) {
+            eval "use Net::SSLeay; 1" or plan skip_all => "Test requires Net::SSLeay";
+            eval "use AnyEvent::TLS; 1" or plan skip_alll => "Test requires AnyEvent::TLS";
+        }
+        $code->($self);
+    };
+}
+
 sub for_all_ok_conn_configs {
     my ($class, $code) = @_;
     foreach my $cconfig (grep { $_->is_ok } $class->all_conn_configs) {
-        subtest $cconfig->label, sub { $code->($cconfig) };
+        $cconfig->_run_code($code);
     }
 }
 
 sub for_all_ng_conn_configs {
     my ($class, $code) = @_;
     foreach my $cconfig (grep { !$_->is_ok } $class->all_conn_configs) {
-        subtest $cconfig->label, sub { $code->($cconfig) };
+        $cconfig->_run_code($code);
     }
 }
 
@@ -130,7 +141,8 @@ sub connect_url {
 
 sub is_plain_socket_transport {
     my ($self) = @_;
-    return ($self->{scheme} eq "ws");
+    my %server_args = $self->server_args;
+    return ($self->{scheme} eq "ws" && !defined($server_args{ssl_cert_file}) && !defined($server_args{ssl_key_file}));
 }
 
 1;
