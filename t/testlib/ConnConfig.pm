@@ -94,12 +94,26 @@ sub all_conn_configs {
     );
 }
 
+my $optional_module_diaged = 0;
+
+sub _optional_module {
+    my ($module_load) = @_;
+    my $ret = eval "use $module_load; 1";
+    if(!$ret) {
+        if(!$optional_module_diaged) {
+            diag "Some tests require $module_load. Skipped them.";
+            $optional_module_diaged = 1;
+        }
+        plan skip_all => "Test requires $module_load";
+    }
+}
+
 sub _run_code {
     my ($self, $code) = @_;
     subtest $self->label, sub {
         if(!$self->is_plain_socket_transport) {
-            eval "use Net::SSLeay; 1" or plan skip_all => "Test requires Net::SSLeay";
-            eval "use AnyEvent::TLS; 1" or plan skip_alll => "Test requires AnyEvent::TLS";
+            _optional_module("Net::SSLeay");
+            _optional_module("AnyEvent::TLS");
         }
         $code->($self);
     };
