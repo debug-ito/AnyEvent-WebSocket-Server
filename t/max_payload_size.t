@@ -1,0 +1,84 @@
+use strict;
+use warnings;
+use Test::More;
+use FindBin;
+use lib ($FindBin::RealBin);
+use testlib::Util qw(start_server set_timeout);
+use testlib::ConnConfig;
+use AnyEvent::WebSocket::Server;
+use AnyEvent::WebSocket::Client;
+
+set_timeout;
+
+my $BIG_MAX_SIZE =  99999;
+my $BIG_DATA_SIZE = 99900;
+
+subtest "server sends a big frame", sub {
+    testlib::ConnConfig->for_all_ok_conn_configs(sub {
+        my ($cconfig) = @_;
+        my $finish_cv = AnyEvent->condvar;
+        my $DATA = "a" x $BIG_DATA_SIZE;
+        my $port_cv = start_server sub {
+            my ($fh) = @_;
+            AnyEvent::WebSocket::Server->new(
+                $cconfig->server_args,
+                max_payload_size_sent => $BIG_MAX_SIZE
+            )->establish($fh)->cb(sub {
+                my ($conn) = shift->recv;
+                $conn->on(finish => sub {
+                    undef $conn;
+                    $finish_cv->send;
+                });
+                $conn->send($DATA);
+            });
+        };
+        my $connect_port = $port_cv->recv;
+        my $client_conn = AnyEvent::WebSocket::Client->new(
+            $cconfig->client_args,
+            max_payload_size_received => $BIG_MAX_SIZE
+        )->connect($cconfig->connect_url($connect_port, "/websocket"))->recv;
+        $client_conn->on(next_message => sub {
+            my ($c, $message) = @_;
+            is $message->body, $DATA;
+            $c->close;
+        });
+        $finish_cv->recv;
+    });
+};
+
+subtest "server receives a big frame", sub {
+    testlib::ConnConfig->for_all_ok_conn_configs(sub {
+        my ($cconfig) = @_;
+        my $finish_cv = AnyEvent->condvar;
+        my $receive_cv = AnyEvent->condvar;
+        my $DATA = "a" x $BIG_DATA_SIZE;
+        my $port_cv = start_server sub {
+            my ($fh) = @_;
+            AnyEvent::WebSocket::Server->new(
+                $cconfig->server_args,
+                max_payload_size_received => $BIG_MAX_SIZE
+            )->establish($fh)->cb(sub {
+                my ($conn) = shift->recv;
+                $conn->on(next_message => sub {
+                    my ($c, $message) = @_;
+                    $receive_cv->send($message->body);
+                });
+                $conn->on(finish => sub {
+                    undef $conn;
+                    $finish_cv->send;
+                });
+            });
+        };
+        my $connect_port = $port_cv->recv;
+        my $client_conn = AnyEvent::WebSocket::Client->new(
+            $cconfig->client_args,
+            max_payload_size_sent => $BIG_MAX_SIZE
+        )->connect($cconfig->connect_url($connect_port, "/websocket"))->recv;
+        $client_conn->send($DATA);
+        $client_conn->close;
+        is $receive_cv->recv, $DATA;
+        $finish_cv->recv;
+    });
+};
+
+done_testing;
