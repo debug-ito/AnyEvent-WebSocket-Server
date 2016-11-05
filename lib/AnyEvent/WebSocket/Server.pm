@@ -23,7 +23,7 @@ sub new {
     }
     my $self = bless {
         handshake => $handshake,
-        map { ($_ => $args{$_}) } qw(ssl_key_file ssl_cert_file),
+        map { ($_ => $args{$_}) } qw(ssl_key_file ssl_cert_file max_payload_size),
     }, $class;
     return $self;
 }
@@ -84,7 +84,10 @@ sub _do_handshake {
                 $res = $res->to_string;
             }
             $handle->push_write("$res");
-            $cv_connection->send(AnyEvent::WebSocket::Connection->new(handle => $handle), @other_results);
+            $cv_connection->send(
+                AnyEvent::WebSocket::Connection->new(handle => $handle, max_payload_size => $self->{max_payload_size}),
+                @other_results
+            );
             undef $handle;
             undef $cv_connection;
         }catch {
