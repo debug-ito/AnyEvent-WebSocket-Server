@@ -36,6 +36,7 @@ var test_cases = [
     {label: "zero", data: "0"},
     {label: "256 bytes", data: createData("AAAA", 64)},
     {label: "64 ki bytes", data: createData("AAAAAAAA", 8 * 1024)},
+    {label: "256 ki bytes", data: createData("AAAAAAAA", 32 * 1024)},
 ];
 
 var ws_url = "ws://127.0.0.1:"+ getPort() +"/";

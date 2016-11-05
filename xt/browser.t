@@ -13,7 +13,7 @@ if(!$ENV{ANYEVENT_WEBSOCKET_SERVER_BROWSER_TEST}) {
 my $TIMEOUT = 30;
 set_timeout($TIMEOUT);
 
-my $server = AnyEvent::WebSocket::Server->new;
+my $server = AnyEvent::WebSocket::Server->new(max_payload_size => 256 * 1024);
 my $cv_finish = AnyEvent->condvar;
 
 my $cv_port = start_server 18888, sub {
