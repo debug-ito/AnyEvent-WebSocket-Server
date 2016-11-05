@@ -1,5 +1,10 @@
 Revision history for AnyEvent-WebSocket-Server
 
+0.09    2016-11-05
+        [ENHANCEMENT]
+        - Add "max_payload_size" option. (gh #3 by rp3u)
+        - Now it requires AnyEvent::WebSocket::Client 0.37
+
 0.08    2016-08-11
         - No functional change from 0.07.
         - TLS tests are now optional. They are run when Net::SSLeay and AnyEvent::TLS are installed.
