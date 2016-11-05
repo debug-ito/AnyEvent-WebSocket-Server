@@ -22,7 +22,6 @@ subtest "server sends a big frame", sub {
             my ($fh) = @_;
             AnyEvent::WebSocket::Server->new(
                 $cconfig->server_args,
-                max_payload_size_sent => $BIG_MAX_SIZE
             )->establish($fh)->cb(sub {
                 my ($conn) = shift->recv;
                 $conn->on(finish => sub {
@@ -35,7 +34,7 @@ subtest "server sends a big frame", sub {
         my $connect_port = $port_cv->recv;
         my $client_conn = AnyEvent::WebSocket::Client->new(
             $cconfig->client_args,
-            max_payload_size_received => $BIG_MAX_SIZE
+            max_payload_size => $BIG_MAX_SIZE
         )->connect($cconfig->connect_url($connect_port, "/websocket"))->recv;
         $client_conn->on(next_message => sub {
             my ($c, $message) = @_;
@@ -56,7 +55,7 @@ subtest "server receives a big frame", sub {
             my ($fh) = @_;
             AnyEvent::WebSocket::Server->new(
                 $cconfig->server_args,
-                max_payload_size_received => $BIG_MAX_SIZE
+                max_payload_size => $BIG_MAX_SIZE
             )->establish($fh)->cb(sub {
                 my ($conn) = shift->recv;
                 $conn->on(next_message => sub {
@@ -72,7 +71,6 @@ subtest "server receives a big frame", sub {
         my $connect_port = $port_cv->recv;
         my $client_conn = AnyEvent::WebSocket::Client->new(
             $cconfig->client_args,
-            max_payload_size_sent => $BIG_MAX_SIZE
         )->connect($cconfig->connect_url($connect_port, "/websocket"))->recv;
         $client_conn->send($DATA);
         $client_conn->close;
