@@ -108,7 +108,7 @@ subtest "server connection emits parse_error event when receiving bigger frame t
         });
         $client_conn->send("*" x ($BIG_DATA_SIZE * 2));
         $finish_cv->recv;
-        is $parse_error_emitted, 1, "parse_error event is emitted";
+        cmp_ok $parse_error_emitted, ">", 0, "parse_error event is emitted";
     });
 };
 
