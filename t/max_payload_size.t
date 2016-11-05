@@ -87,6 +87,7 @@ subtest "server connection emits parse_error event when receiving too big frame"
             my ($fh) = @_;
             AnyEvent::WebSocket::Server->new(
                 $cconfig->server_args,
+                max_payload_size => $BIG_DATA_SIZE - 100
             )->establish($fh)->cb(sub {
                 my ($conn) = shift->recv;
                 $conn->on(parse_error => sub {
