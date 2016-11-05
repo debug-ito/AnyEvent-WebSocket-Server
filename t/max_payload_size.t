@@ -79,4 +79,36 @@ subtest "server receives a big frame", sub {
     });
 };
 
+subtest "server connection emits parse_error event when receiving too big frame", sub {
+    testlib::ConnConfig->for_all_ok_conn_configs(sub {
+        my ($cconfig) = @_;
+        my $parse_error_emitted = 0;
+        my $port_cv = start_server sub {
+            my ($fh) = @_;
+            AnyEvent::WebSocket::Server->new(
+                $cconfig->server_args,
+            )->establish($fh)->cb(sub {
+                my ($conn) = shift->recv;
+                $conn->on(parse_error => sub {
+                    $parse_error_emitted++;
+                });
+                $conn->on(finish => sub {
+                    undef $conn;
+                });
+            });
+        };
+        my $connect_port = $port_cv->recv;
+        my $client_conn = AnyEvent::WebSocket::Client->new(
+            $cconfig->client_args,
+        )->connect($cconfig->connect_url($connect_port, "/websocket"))->recv;
+        my $finish_cv = AnyEvent->condvar;
+        $client_conn->on(finish => sub {
+            $finish_cv->send;
+        });
+        $client_conn->send("*" x $BIG_DATA_SIZE);
+        $finish_cv->recv;
+        is $parse_error_emitted, 1, "parse_error event is emitted";
+    });
+};
+
 done_testing;
