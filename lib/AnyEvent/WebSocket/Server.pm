@@ -252,6 +252,10 @@ The file may contain both the certificate and corresponding private key. In that
 
 If this option is set, L<AnyEvent::WebSocket::Server> encrypts the WebSocket streams with SSL/TLS.
 
+=item C<max_payload_size> => INT (optional)
+
+The maximum payload size for received frames. Currently defaults to whatever L<Protocol::WebSocket> defaults to.
+Note that payload size for sent frames are not limited.
 
 =back
 
