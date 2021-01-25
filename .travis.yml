@@ -8,4 +8,4 @@ perl:
   - "5.20"
   - "5.22"
   - "5.24"
-before_install: "cpanm Module::Build::Prereqs::FromCPANfile"
+before_install: "cpanm Module::Build Module::Build::Prereqs::FromCPANfile"
