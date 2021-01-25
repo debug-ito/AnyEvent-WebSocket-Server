@@ -58,11 +58,13 @@ sub _handle_args_tls {
 }
 
 sub _do_handshake {
-    my ($self, $cv_connection, $fh, $handshake) = @_;
+    my ($self, $cv_connection, $fh, $handshake, $handle_args) = @_;
     my $handshake_code = $self->{handshake};
     my $handle = AnyEvent::Handle->new(
         $self->_handle_args_tls,
-        fh => $fh, on_error => _create_on_error($cv_connection)
+        fh => $fh,
+        on_error => _create_on_error($cv_connection),
+        %$handle_args,
     );
     my $read_cb = sub {
         ## We don't receive handle object as an argument here. $handle
@@ -103,19 +105,19 @@ sub _do_handshake {
 }
 
 sub establish {
-    my ($self, $fh) = @_;
+    my ($self, $fh, $handle_args) = @_;
     my $cv_connection = AnyEvent->condvar;
     if(!defined($fh)) {
         $cv_connection->croak("fh parameter is mandatory for establish() method");
         return $cv_connection;
     }
     my $handshake = Protocol::WebSocket::Handshake::Server->new;
-    $self->_do_handshake($cv_connection, $fh, $handshake);
+    $self->_do_handshake($cv_connection, $fh, $handshake, $handle_args);
     return $cv_connection;
 }
 
 sub establish_psgi {
-    my ($self, $env, $fh) = @_;
+    my ($self, $env, $fh, $handle_args) = @_;
     my $cv_connection = AnyEvent->condvar;
     if(!defined($env)) {
         $cv_connection->croak("psgi_env parameter is mandatory");
@@ -127,7 +129,7 @@ sub establish_psgi {
         return $cv_connection;
     }
     my $handshake = Protocol::WebSocket::Handshake::Server->new_from_psgi($env);
-    $self->_do_handshake($cv_connection, $fh, $handshake);
+    $self->_do_handshake($cv_connection, $fh, $handshake, $handle_args);
     return $cv_connection;
 }
 
